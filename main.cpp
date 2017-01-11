@@ -18,7 +18,7 @@ int main() {
 	SPPoint** rgbHistA;
 	SPPoint** rgbHistB;
 	rgbHistA=spGetRGBHist("images\\img3.png",1, 256);
-	rgbHistB=spGetRGBHist("images\\img3_ccw.png",2, 256);
+	rgbHistB=spGetRGBHist("images\\img4.png",2, 256);
 	printf("%d\n",spPointGetDimension(rgbHistA[0]));
 	printf("%f\n",spPointGetAxisCoor(rgbHistA[0],0));
 
