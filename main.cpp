@@ -17,11 +17,13 @@ using namespace std;
 int main() {
 	SPPoint** rgbHistA;
 	SPPoint** rgbHistB;
-	rgbHistA=spGetRGBHist("queryA.png",1, 256);
-	rgbHistB=spGetRGBHist("queryB.png",2, 256);
+	rgbHistA=spGetRGBHist("images\\img3.png",1, 256);
+	rgbHistB=spGetRGBHist("images\\img3_ccw.png",2, 256);
 	printf("%d\n",spPointGetDimension(rgbHistA[0]));
 	printf("%f\n",spPointGetAxisCoor(rgbHistA[0],0));
 
 	printf("the dis between %f\n",spRGBHistL2Distance(rgbHistA, rgbHistB));
-	return showPictureColor("queryA.png");
+	free(rgbHistA);
+	free(rgbHistB);
+	return showPictureColor("images\\img3.png");
 }

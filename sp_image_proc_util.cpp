@@ -22,20 +22,16 @@ extern "C" {
 SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	Mat src;
 	SPPoint** res;
-	int i=0;
-	int j=0;
-	int N=3;
+	int i=0,j=0,NumOfChannels=3;
 	double arr[nBins] = {0};
 	src = imread(str, CV_LOAD_IMAGE_COLOR);
 	if (src.empty())
 		return NULL;	//a problem with loading image
+
 	res = (SPPoint**) malloc(3 * sizeof(*res));
 	if (NULL == res) {
 		return NULL;
 	}
-//	res[0]=spPointCreate(arr,nBins,imageIndex);//red
-//	res[1]=spPointCreate(arr,nBins,imageIndex);//green
-//	res[2]=spPointCreate(arr,nBins,imageIndex);//blue
 
 	/// Separate the image in 3 places ( B, G and R )
 	std::vector<Mat> bgr_planes;
@@ -49,7 +45,7 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	int nImages = 1;
 
 	//Output
-	Mat hist[N];
+	Mat hist[NumOfChannels];
 
 	/// Compute the histograms:
 	/// The results will be store in b_hist,g_hist,r_hist.
@@ -57,20 +53,16 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	calcHist(&bgr_planes[0], nImages, 0, Mat(), hist[0], 1, &nBins, &histRange);
 	calcHist(&bgr_planes[1], nImages, 0, Mat(), hist[1], 1, &nBins, &histRange);
 	calcHist(&bgr_planes[2], nImages, 0, Mat(), hist[2], 1, &nBins, &histRange);
-	//broken not working
-//	printf("the first hist %f\n",r_hist.at<float>(3,3));
-	for (j=0;j<N;j++){
+
+	for (j=0;j<NumOfChannels;j++){
 		for (i=0;i<nBins;i++){
 			arr[i]=hist[j].at<float>(i);
 		}
-		res[N-1-j]= spPointCreate(arr, nBins, imageIndex);
+		res[NumOfChannels-1-j]= spPointCreate(arr, nBins, imageIndex);
 	}
-//
-//	res[2] = spPointCreate((double*) hist[0].data, nBins, imageIndex);	//blue
-//	res[1] = spPointCreate((double*) hist[1].data, nBins, imageIndex);	//green
-//	res[0] = spPointCreate((double*) hist[2].data, nBins, imageIndex);	//red
 	return res;
 }
+
 double spRGBHistL2Distance(SPPoint** rgbHistA, SPPoint** rgbHistB) {
 	int i = 0;
 	double sum = 0;
