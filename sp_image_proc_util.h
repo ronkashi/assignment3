@@ -107,5 +107,4 @@ int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
 		int* nFeaturesPerImage);
 
 
-
 #endif /* SP_IMAGE_PROC_UTIL_H_ */
