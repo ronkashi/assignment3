@@ -18,6 +18,7 @@ extern "C" {
 //Use this syntax in-order to include C-header files
 //HINT : You don't need to include other C header files here -> Maybe in sp_image_proc_util.c ? <-
 #include "SPPoint.h"
+#include "SPBPriorityQueue.h"
 #include <assert.h>
 }
 
