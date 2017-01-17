@@ -7,7 +7,9 @@
 
 #include "sp_image_proc_util.h"
 
-#include <opencv2/imgproc.hpp>//calcHist#include <opencv2/core.hpp>//Mat#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>//calcHist
+#include <opencv2/core.hpp>//Mat
+#include <opencv2/highgui.hpp>
 #include <vector>
 #include <iostream>
 using namespace cv;
@@ -77,15 +79,69 @@ double spRGBHistL2Distance(SPPoint** rgbHistA, SPPoint** rgbHistB) {
 	sum = sum / 3;
 	return sum;
 }
+
 SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 		int nFeaturesToExtract, int *nFeatures) {
-
+	int i, j;
+	double* cord_array;
+	cv::Mat src;
+	src = cv::imread(str, CV_LOAD_IMAGE_GRAYSCALE);
+	if (src.empty()) {
+		return NULL;
+	}
+	//Key points will be stored in kp1;
+	std::vector<cv::KeyPoint> kp1;
+	//Feature values will be stored in ds1;
+	cv::Mat ds1;
+	//Creating  a Sift Descriptor extractor
+	cv::Ptr<cv::xfeatures2d::SiftDescriptorExtractor> detect =
+			cv::xfeatures2d::SIFT::create(nFeaturesToExtract);
+	//Extracting features
+	//The features will be stored in ds1
+	//The output type of ds1 is CV_32F (float)
+	detect->detect(src, kp1, cv::Mat());
+	detect->compute(src, kp1, ds1);
+	SPPoint** pointArray;
+	pointArray = (SPPoint**) malloc((ds1.rows) * sizeof(SPPoint*)); // n points and one comparison point
+	if(pointArray == NULL) {
+		return NULL;
+	}
+	cord_array = (double*) malloc(ds1.cols * sizeof(double));
+	for(i=0; i<ds1.rows; i++) {
+		for(j=0; j<ds1.cols; j++) {
+			cord_array[j] = (double) ds1.at<float>(i,j);
+		}
+		pointArray[i] = spPointCreate(cord_array, ds1.cols, imageIndex);
+	}
+	*nFeatures = ds1.rows;
+	return pointArray;
 }
 
 int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
-		SPPoint*** databaseFeatures, int numberOfImages,
-		int* nFeaturesPerImage) {
-
+		SPPoint*** databaseFeatures, int numberOfImages, int* nFeaturesPerImage) {
+	SPBPQueue* queue;
+	BPQueueElement* element;
+	int i, j;
+	int* array;
+	queue = spBPQueueCreate(kClosest);  // creating the queue that will hold teh index-L2distance elements
+	if(queue == NULL) {
+		return NULL;
+	}
+	for(i=0; i<numberOfImages; i++) {
+		for(j=0; j<nFeaturesPerImage[i]; j++) {
+			spBPQueueEnqueue(queue, i, spPointL2SquaredDistance(databaseFeatures[i][j], queryFeature));
+		}
+	}
+	element = (BPQueueElement*) malloc(sizeof(BPQueueElement));  // will store the index and value when peeking
+	array = (int*) malloc(kClosest * sizeof(int));
+	for(i=0; i<kClosest; i++) {
+		spBPQueuePeek(queue, element); // gets the index and value of the smallest valued element
+		array[i] = element->index; // prints the index
+		spBPQueueDequeue(queue);  // removes the smallest element from the queue
+	}
+	spBPQueueDestroy(queue); // free queue
+	free(element);
+	return array;
 }
 
 int showPictureColor(const char* str) {
