@@ -11,13 +11,12 @@
 #include "sp_image_proc_util.h"
 
 typedef enum sp_main_aux_msg_t {
-	SP_OUT_OF_MEMORY,
-	SP_INVALID_ARGUMENT,
-	SP_SUCCESS
+	SP_OUT_OF_MEMORY, SP_INVALID_ARGUMENT, SP_SUCCESS
 } MAIN_MSG;
 
 extern "C" {
 //Use this syntax in-order to include C-header files
+#include "SPPoint.h"
 }
 /*
  * Ask the user to enter a string representing the path of the images directory
@@ -29,26 +28,38 @@ extern "C" {
  */
 MAIN_MSG spEnterImgsPath(char* path);
 
-MAIN_MSG spEnterImgPreffix(char* preffix);
-
-MAIN_MSG spEnterImgNum(char* preffix);
+MAIN_MSG spEnterImgPrefix(char* prefix);
 
 MAIN_MSG spEnterImgSuffix(char* suffix);
+
+MAIN_MSG spEnterImgNum(int* imgNum);
 
 MAIN_MSG spEnterBinNum(int* BinNum);
 
 MAIN_MSG spEnterFeaturesNum(int* FeaturesNum);
 
-MAIN_MSG spCalcHistAndSIFT(int numOfBins, int numOfImgs, int numOfFeaturesToExtract ,char* fullPath);
+MAIN_MSG spMakeFullPath(char* path, char* prefix, char* suffix, int* imgNum);
 
-MAIN_MSG spCalcHist(int numOfBins ,char* fullPath);//per image
+MAIN_MSG spGetUserInput(char* path, char* prefix, char* suffix, int* imgNum,
+		int* binNum, int* featuresNum);
 
-MAIN_MSG spCalcSift(int numOfFeaturesToExtract ,char* fullPath);//per image
+MAIN_MSG spCalcHistAndSIFT(int numOfBins, int numOfImgs,
+		int numOfFeaturesToExtract, char* fullPath);
 
-MAIN_MSG spQueryImg(char* fullPathQuery); //another input is our mega DB with the hist & SIFTs
+MAIN_MSG spCalcHist(int numOfBins, SPPoint** dataBaseHist, char* fullPath);
 
+MAIN_MSG spCalcSift(int numOfFeaturesToExtract, SPPoint*** dataBaseFeatures,
+		char* fullPath);
 
+//before this func check if not # aka exit and free all
+MAIN_MSG spEnterQueryImg(char* queryPath); //will get a relative path
 
+MAIN_MSG spQueryImg(char* queryPath, SPPoint** dataBaseHist,
+		SPPoint*** dataBaseFeatures);
+
+MAIN_MSG spReturnGlobalSearch();
+
+MAIN_MSG spReturnLocalSearch();
 
 
 #endif /* MAIN_AUX_H_ */
