@@ -11,7 +11,7 @@
 #include "sp_image_proc_util.h"
 
 typedef enum sp_main_aux_msg_t {
-	SP_SUCCESS,SP_OUT_OF_MEMORY, SP_INVALID_ARGUMENT
+	SP_SUCCESS,SP_OUT_OF_MEMORY, SP_INVALID_ARGUMENT,SP_EXIT
 } MAIN_MSG;
 
 extern "C" {
