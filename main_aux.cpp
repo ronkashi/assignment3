@@ -183,15 +183,16 @@ MAIN_MSG spCalcHist(int numOfBins, SPPoint*** dataBaseHist, const char* fullPath
 
 MAIN_MSG spCalcSift(int numOfFeaturesToExtract, SPPoint*** dataBaseFeatures,
 		const char* fullPath, int numOfImgs, int *nFeatures) {
-	int i;
+	int i, nExtracted;
 	char* path = (char*) malloc(MAX * sizeof (char));
 	for(i=0; i<numOfImgs; i++) {
 		sprintf(path, fullPath, i);
-		dataBaseFeatures[i] = spGetSiftDescriptors(path, i, numOfFeaturesToExtract, nFeatures);
+		dataBaseFeatures[i] = spGetSiftDescriptors(path, i, numOfFeaturesToExtract, &nExtracted);
 		if(dataBaseFeatures[i] == NULL) {
 			//free resources
 			return SP_OUT_OF_MEMORY;
 		}
+		nFeatures[i] = nExtracted;
 	}
 	free(path);
 	return SP_SUCCESS;
