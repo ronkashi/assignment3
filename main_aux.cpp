@@ -6,8 +6,7 @@
  */
 
 #include "main_aux.h"
-#include <stdio.h>
-#include <string.h>
+
 
 extern "C" {
 //Use this syntax in-order to include C-header files
@@ -16,7 +15,8 @@ extern "C" {
 #include <assert.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 }
 
 #define ENTER_IMG_DIR_MSG "Enter images directory path:\n"
@@ -28,7 +28,7 @@ extern "C" {
 #define QUERY_IMG_MSG "Enter a query image or # to terminate:\n"
 
 #define flush fflush(NULL);
-
+#define MAX 1024
 
 MAIN_MSG spEnterImgsPath(char* path) {
 	if (NULL == path) {
@@ -166,14 +166,38 @@ MAIN_MSG spCalcHistAndSIFT(int numOfBins, int numOfImgs,
 
 }
 
-MAIN_MSG spCalcHist(int numOfBins, SPPoint** dataBaseHist, char* fullPath) {
-
+MAIN_MSG spCalcHist(int numOfBins, SPPoint*** dataBaseHist, const char* fullPath, int numOfImgs) {
+	int i;
+	char* path = (char*) malloc(MAX * sizeof (char));
+	for(i=0; i<numOfImgs; i++) {
+		sprintf(path, fullPath, i);
+		dataBaseHist[i] = spGetRGBHist(path, i, numOfBins);
+		if(dataBaseHist[i] == NULL) {
+			//free resources
+			return SP_OUT_OF_MEMORY;
+		}
+	}
+	free(path);
+	return SP_SUCCESS;
 }
 
 MAIN_MSG spCalcSift(int numOfFeaturesToExtract, SPPoint*** dataBaseFeatures,
-		char* fullPath) {
-
+		const char* fullPath, int numOfImgs, int *nFeatures) {
+	int i;
+	char* path = (char*) malloc(MAX * sizeof (char));
+	for(i=0; i<numOfImgs; i++) {
+		sprintf(path, fullPath, i);
+		dataBaseFeatures[i] = spGetSiftDescriptors(path, i, numOfFeaturesToExtract, nFeatures);
+		if(dataBaseFeatures[i] == NULL) {
+			//free resources
+			return SP_OUT_OF_MEMORY;
+		}
+	}
+	free(path);
+	return SP_SUCCESS;
 }
+
+
 //will get a relative path
 //before this func check if not # aka exit and free all
 MAIN_MSG spEnterQueryImg(char* queryPath) {
