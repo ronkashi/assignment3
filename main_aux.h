@@ -23,8 +23,8 @@ extern "C" {
  * (more information will be given shortly): "Enter images directory path:\n"
  * The directory contains the images that we will be searching from.
  * All images names must be the same except for their indexes.
- * For examples, the directory: ì./images/î may contain
- * the following images: ìimg0.jpgî, ìimg1.jpgî, ìimg2.jpgîÖ
+ * For examples, the directory: ‚Äú./images/‚Äù may contain
+ * the following images: ‚Äúimg0.jpg‚Äù, ‚Äúimg1.jpg‚Äù, ‚Äúimg2.jpg‚Äù‚Ä¶
  */
 MAIN_MSG spEnterImgsPath(char* path);
 
@@ -46,15 +46,15 @@ MAIN_MSG spGetUserInput(char* path, char* prefix, char* suffix, int* imgNum,
 MAIN_MSG spCalcHistAndSIFT(int numOfBins, int numOfImgs,
 		int numOfFeaturesToExtract, char* fullPath);
 
-MAIN_MSG spCalcHist(int numOfBins, SPPoint** dataBaseHist, char* fullPath);
+MAIN_MSG spCalcHist(int numOfBins, SPPoint*** dataBaseHist, const char* fullPath, int numOfImgs);
 
 MAIN_MSG spCalcSift(int numOfFeaturesToExtract, SPPoint*** dataBaseFeatures,
-		char* fullPath);
+		const char* fullPath, int numOfImgs, int *nFeatures);
 
 //before this func check if not # aka exit and free all
 MAIN_MSG spEnterQueryImg(char* queryPath); //will get a relative path
 
-MAIN_MSG spQueryImg(char* queryPath, SPPoint** dataBaseHist,
+MAIN_MSG spQueryImg(char* queryPath, SPPoint*** dataBaseHist,
 		SPPoint*** dataBaseFeatures);
 
 MAIN_MSG spReturnGlobalSearch();
