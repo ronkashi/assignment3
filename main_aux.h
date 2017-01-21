@@ -11,12 +11,12 @@
 #include "sp_image_proc_util.h"
 
 typedef enum sp_main_aux_msg_t {
-	SP_OUT_OF_MEMORY, SP_INVALID_ARGUMENT, SP_SUCCESS
+	SP_SUCCESS,SP_OUT_OF_MEMORY, SP_INVALID_ARGUMENT
 } MAIN_MSG;
 
 extern "C" {
-//Use this syntax in-order to include C-header files
-#include "SPPoint.h"
+	//Use this syntax in-order to include C-header files
+	#include "SPPoint.h"
 }
 /*
  * Ask the user to enter a string representing the path of the images directory
@@ -38,7 +38,7 @@ MAIN_MSG spEnterBinNum(int* BinNum);
 
 MAIN_MSG spEnterFeaturesNum(int* FeaturesNum);
 
-MAIN_MSG spMakeFullPath(char* path, char* prefix, char* suffix, int* imgNum);
+MAIN_MSG spMakeFullPath(char* fullPath,char* path, char* prefix, char* suffix,int imgCurrNum);
 
 MAIN_MSG spGetUserInput(char* path, char* prefix, char* suffix, int* imgNum,
 		int* binNum, int* featuresNum);
