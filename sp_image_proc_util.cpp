@@ -7,6 +7,8 @@
 
 #include "sp_image_proc_util.h"
 
+#include <opencv2/xfeatures2d.hpp>//SiftDescriptorExtractor
+#include <opencv2/features2d.hpp>
 #include <opencv2/imgproc.hpp>//calcHist
 #include <opencv2/core.hpp>//Mat
 #include <opencv2/highgui.hpp>
