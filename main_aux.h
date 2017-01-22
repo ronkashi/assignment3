@@ -23,8 +23,8 @@ extern "C" {
  * (more information will be given shortly): "Enter images directory path:\n"
  * The directory contains the images that we will be searching from.
  * All images names must be the same except for their indexes.
- * For examples, the directory: “./images/” may contain
- * the following images: “img0.jpg”, “img1.jpg”, “img2.jpg”…
+ * For examples, the directory: "./images/"
+ * may contain the following images: "img0.jpg","img1.jpg"...
  */
 MAIN_MSG spEnterImgsPath(char* path);
 
@@ -57,9 +57,10 @@ MAIN_MSG spEnterQueryImg(char* queryPath); //will get a relative path
 MAIN_MSG spQueryImg(char* queryPath, SPPoint*** dataBaseHist,
 		SPPoint*** dataBaseFeatures);
 
-MAIN_MSG spReturnGlobalSearch();
+MAIN_MSG spReturnGlobalSearch(char* queryPath, SPPoint*** dataBaseHist);
 
-MAIN_MSG spReturnLocalSearch();
+MAIN_MSG spReturnLocalSearch(char* queryPath, SPPoint*** dataBaseFeatures);
 
+int cmpfunc (const void * a, const void * b);
 
 #endif /* MAIN_AUX_H_ */

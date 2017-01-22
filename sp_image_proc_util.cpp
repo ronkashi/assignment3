@@ -30,7 +30,7 @@ extern "C" {
 SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	Mat src;
 	SPPoint** res;
-	int i = 0, j = 0, NumOfChannels = 3;
+	int i = 0, j = 0;
 	double arr[nBins] = { 0 };
 	src = imread(str, CV_LOAD_IMAGE_COLOR);
 	if (src.empty()){
