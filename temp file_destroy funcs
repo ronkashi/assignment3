@@ -1,0 +1,31 @@
+MAIN_MSG spDestroyDBsift(SPPoint*** DB,int imgNum,int* nFeaturesPerImage){
+	int i=0;
+	int j=0;
+	if(NULL == DB || NULL==nFeaturesPerImage){
+		return SP_INVALID_ARGUMENT;
+	}
+	for(i=0;i<imgNum;i++){
+		for(j=0;j<nFeaturesPerImage[i];j++){
+			spPointDestroy(DB[i][j]);
+		}
+		free(DB[i]);
+	}
+	free(DB);
+	return SP_SUCCESS;
+}
+
+MAIN_MSG spDestroyDBhist(SPPoint*** DB,int imgNum){
+	int i=0;
+	int j=0;
+	if(NULL == DB){
+		return SP_INVALID_ARGUMENT;
+	}
+	for(i=0;i<imgNum;i++){
+		for(j=0;j<NumOfChannels;j++){
+			spPointDestroy(DB[i][j]);
+		}
+		free(DB[i]);
+	}
+	free(DB);
+	return SP_SUCCESS;
+}
