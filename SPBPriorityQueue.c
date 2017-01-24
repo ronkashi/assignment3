@@ -7,9 +7,6 @@
 #define EMPTY_BPQUEUE_ELEMENT_INDEX -1
 #define EMPTY_BPQUEUE_ELEMENT_VALUE -1
 
-
-
-
 /** type used to define Bounded priority queue
  *
  * size - the numbers of elements in the queue
@@ -22,7 +19,6 @@ struct sp_bp_queue_t {
 	int maxSize;
 	BPQueueElement* queue; //pointer to the first element of the queue
 };
-
 
 SPBPQueue* spBPQueueCreate(int maxSize) {
 	assert(0 < maxSize);
@@ -55,14 +51,12 @@ SPBPQueue* spBPQueueCopy(SPBPQueue* source) {
 	return copy;
 }
 
-
 void spBPQueueDestroy(SPBPQueue* source) {
 	if (NULL == source)
 		return;
-	free(source->queue);
+	free(&(source->queue));
 	free(source);
 }
-
 
 void spBPQueueClear(SPBPQueue* source) {
 	assert(NULL != source);
@@ -78,18 +72,15 @@ void spBPQueueClear(SPBPQueue* source) {
 	return;
 }
 
-
 int spBPQueueSize(SPBPQueue* source) {
 	assert(NULL != source);
 	return source->size;
 }
 
-
 int spBPQueueGetMaxSize(SPBPQueue* source) {
 	assert(source != NULL);
 	return source->maxSize;
 }
-
 
 SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 	int i = 0;
@@ -98,22 +89,26 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 		return SP_BPQUEUE_INVALID_ARGUMENT;
 	}
 	for (i = 0; i < (source->size); i++) {
-		if (value > source->queue[i].value || (value == source->queue[i].value && index > source->queue[i].index)) {
+		if (value >= source->queue[i].value) {
+			break;
+		}
+	}
+	for (; (i < (source->size)) && (value == source->queue[i].value); i++) {
+		if (index >= source->queue[i].index) {
 			break;
 		}
 	}
 	if (spBPQueueIsFull(source)) {
-		for (j = 0; j < i-1; j++) {
+		for (j = 0; j < i - 1; j++) {
 			source->queue[j] = source->queue[j + 1];
 		}
-		if(i==0){//the queue is full and we trying to insert higher value than all the elements
+		if (i == 0) {//the queue is full and we trying to insert higher value than all the elements
 			return SP_BPQUEUE_FULL;
 		}
 		source->queue[i - 1].index = index;
 		source->queue[i - 1].value = value;
 		return SP_BPQUEUE_FULL;
-	}
-	else {
+	} else {
 		for (j = source->size - 1; j >= i; j--) {
 			source->queue[j + 1] = source->queue[j];
 		}
@@ -123,7 +118,6 @@ SP_BPQUEUE_MSG spBPQueueEnqueue(SPBPQueue* source, int index, double value) {
 		return SP_BPQUEUE_SUCCESS;
 	}
 }
-
 
 SP_BPQUEUE_MSG spBPQueueDequeue(SPBPQueue* source) {
 	BPQueueElement emptyElement;
@@ -141,14 +135,13 @@ SP_BPQUEUE_MSG spBPQueueDequeue(SPBPQueue* source) {
 
 }
 
-
 SP_BPQUEUE_MSG spBPQueuePeek(SPBPQueue* source, BPQueueElement* res) {
 	if (NULL == source || NULL == source->queue || NULL == res) {
 		return SP_BPQUEUE_INVALID_ARGUMENT;
 	}
 	if (spBPQueueIsEmpty(source)) {
-		res->index=EMPTY_BPQUEUE_ELEMENT_INDEX;
-		res->value=EMPTY_BPQUEUE_ELEMENT_VALUE;
+		res->index = EMPTY_BPQUEUE_ELEMENT_INDEX;
+		res->value = EMPTY_BPQUEUE_ELEMENT_VALUE;
 		//because we aren't able to peek from an empty queue
 		return SP_BPQUEUE_EMPTY;
 	}
@@ -157,14 +150,13 @@ SP_BPQUEUE_MSG spBPQueuePeek(SPBPQueue* source, BPQueueElement* res) {
 	return SP_BPQUEUE_SUCCESS;
 }
 
-
 SP_BPQUEUE_MSG spBPQueuePeekLast(SPBPQueue* source, BPQueueElement* res) {
 	if (NULL == source || NULL == source->queue || NULL == res) {
 		return SP_BPQUEUE_INVALID_ARGUMENT;
 	}
 	if (spBPQueueIsEmpty(source)) {
-		res->index=EMPTY_BPQUEUE_ELEMENT_INDEX;
-		res->value=EMPTY_BPQUEUE_ELEMENT_VALUE;
+		res->index = EMPTY_BPQUEUE_ELEMENT_INDEX;
+		res->value = EMPTY_BPQUEUE_ELEMENT_VALUE;
 		//because we aren't able to peek from an empty queue
 		return SP_BPQUEUE_EMPTY;
 	}
@@ -173,11 +165,10 @@ SP_BPQUEUE_MSG spBPQueuePeekLast(SPBPQueue* source, BPQueueElement* res) {
 	return SP_BPQUEUE_SUCCESS;
 }
 
-
 double spBPQueueMinValue(SPBPQueue* source) {
 	assert(source != NULL);
 	assert(source->queue != NULL);
-	if(spBPQueueIsEmpty(source)){
+	if (spBPQueueIsEmpty(source)) {
 		return -1;
 	}
 	return source->queue[source->size - 1].value;
@@ -186,7 +177,7 @@ double spBPQueueMinValue(SPBPQueue* source) {
 double spBPQueueMaxValue(SPBPQueue* source) {
 	assert(NULL != source);
 	assert(source->queue != NULL);
-	if(spBPQueueIsEmpty(source)){
+	if (spBPQueueIsEmpty(source)) {
 		return -1;
 	}
 	return source->queue[0].value;
@@ -200,7 +191,6 @@ bool spBPQueueIsEmpty(SPBPQueue* source) {
 		return false;
 	}
 }
-
 
 bool spBPQueueIsFull(SPBPQueue* source) {
 	assert(source!=NULL);
