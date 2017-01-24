@@ -13,7 +13,6 @@
 using namespace cv;
 using namespace std;
 
-int showPictureColor(const char* str);
 
 int main() {
 
@@ -23,10 +22,7 @@ int main() {
 	char suffix[MAX_STR_LEN];
 	char fullPath[MAX_STR_LEN];
 	char queryPath[MAX_STR_LEN];
-	int imgNum=0;
-	int binNum=0;
-	int featuresNum=0;
-	int i=0;
+	int imgNum=1, binNum=0, featuresNum=0, *nFeaturesPerImage;
 	SPPoint*** dataBaseHist;
 	SPPoint*** dataBaseFeatures;
 
@@ -34,7 +30,7 @@ int main() {
 		return 0;
 	}
 
-	int nFeaturesPerImage[imgNum]={0};
+	nFeaturesPerImage = (int*) malloc(imgNum * sizeof (int));
 
 	dataBaseHist=(SPPoint***)calloc(imgNum,sizeof(*dataBaseHist));
 	if(NULL == dataBaseHist){
@@ -60,59 +56,9 @@ int main() {
 		spReturnLocalSearch(queryPath, &featuresNum,dataBaseFeatures, imgNum, nFeaturesPerImage);
 
 	}
+	free(nFeaturesPerImage);
 	//TODO free dataBaseHist
 	//TODO free all
 	return 0;
 
-
-//	printf("%s",fullPath);
-
-
-	///////old main//////
-//	SPPoint** rgbHistA;
-//	SPPoint** rgbHistB;
-//	SPPoint*** siftArray;
-//	SPPoint*** histArray;
-//	int* nFeatures;
-//	int n = 17, k = 5, i, j;
-//	MAIN_MSG msg;
-//	const char* path = "images\\img%d.png";
-//	rgbHistA=spGetRGBHist("images\\img3.png",1, 256);
-//	rgbHistB=spGetRGBHist("images\\img4.png",2, 256);
-//	printf("%d\n",spPointGetDimension(rgbHistA[0]));
-//	printf("%f\n",spPointGetAxisCoor(rgbHistA[0],0));
-//
-//	printf("the dis between %f\n",spRGBHistL2Distance(rgbHistA, rgbHistB));
-//	free(rgbHistA);
-//	free(rgbHistB);
-//
-//	histArray = (SPPoint***) malloc(n * sizeof (SPPoint**));
-//	msg = spCalcHist(256, histArray, path, n);
-//	if(msg == SP_SUCCESS) {
-//		printf("success!\n");
-//	}
-//
-//	siftArray = (SPPoint***) malloc(n * sizeof(SPPoint**));
-//	nFeatures = (int*) malloc(n * sizeof(int));
-//	msg = spCalcSift(k, siftArray, path, n, nFeatures);
-//	if(msg == SP_SUCCESS) {
-//		printf("success!\n");
-//	}
-//	for(i=0; i<n; i++) {
-//		for(j=0; j<3; j++) {
-//			spPointDestroy(histArray[i][j]);
-//		}
-//		free(histArray[i]);
-//	}
-//	free(histArray);
-//
-//	for(i=0; i<n; i++) {
-//		for(j=0; j<nFeatures[i]; j++) {
-//			spPointDestroy(siftArray[i][j]);
-//		}
-//		free(siftArray[i]);
-//	}
-//	free(siftArray);
-//	free(nFeatures);
-//	return showPictureColor("images\\img3.png");
 }
