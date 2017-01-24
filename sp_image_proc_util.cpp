@@ -18,6 +18,7 @@
 using namespace cv;
 using namespace std;
 
+#define NumOfChannels 3
 #define IMG_NOT_LOADED "Image cannot be loaded - %s:\n"
 extern "C" {
 //Use this syntax in-order to include C-header files
@@ -31,7 +32,7 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	Mat src;
 	SPPoint** res;
 	int i = 0, j = 0;
-	double arr[nBins] = { 0 };
+	double *arr;
 	src = imread(str, CV_LOAD_IMAGE_COLOR);
 	if (src.empty()){
 		printf(IMG_NOT_LOADED,str); //TODO free all mallocs and exit
@@ -62,13 +63,14 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	calcHist(&bgr_planes[0], nImages, 0, Mat(), hist[0], 1, &nBins, &histRange);
 	calcHist(&bgr_planes[1], nImages, 0, Mat(), hist[1], 1, &nBins, &histRange);
 	calcHist(&bgr_planes[2], nImages, 0, Mat(), hist[2], 1, &nBins, &histRange);
-
+	arr = (double*) malloc(nBins * sizeof (double));
 	for (j = 0; j < NumOfChannels; j++) {
 		for (i = 0; i < nBins; i++) {
 			arr[i] = hist[j].at<float>(i);
 		}
 		res[NumOfChannels - 1 - j] = spPointCreate(arr, nBins, imageIndex);
 	}
+	free(arr);
 	return res;
 }
 
