@@ -22,6 +22,7 @@ extern "C" {
 #define flush fflush(NULL);
 #define MAX_STR_LEN 1024
 #define ALLOC_FAIL "An error occurred - allocation failure\n"
+#define NumOfChannels 3
 
 
 /*
@@ -71,6 +72,7 @@ int cmpfunc(const void * a, const void * b);
 
 MAIN_MSG freeMemInput (char* path, char* prefix, char* suffix, int* imgNum,
 		int* binNum, int* featuresNum);
-MAIN_MSG spDestroyDB(SPPoint*** DB,int imgNum);
+MAIN_MSG spDestroyDBsift(SPPoint*** DB,int imgNum,int* nFeaturesPerImage);
+MAIN_MSG spDestroyDBhist(SPPoint*** DB,int imgNum);
 
 #endif /* MAIN_AUX_H_ */
