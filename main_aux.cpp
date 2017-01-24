@@ -186,6 +186,7 @@ MAIN_MSG spCalcHist(int numOfBins, SPPoint*** dataBaseHist,
 		dataBaseHist[i] = spGetRGBHist(path, i, numOfBins);
 		if (dataBaseHist[i] == NULL) {
 			//free resources
+			printf(ALLOC_FAIL);
 			return SP_OUT_OF_MEMORY;
 		}
 	}
@@ -203,6 +204,7 @@ MAIN_MSG spCalcSift(int numOfFeaturesToExtract, SPPoint*** dataBaseFeatures,
 				numOfFeaturesToExtract, &nExtracted);
 		if (dataBaseFeatures[i] == NULL) {
 			//TODO free resources
+			printf(ALLOC_FAIL);
 			return SP_OUT_OF_MEMORY;
 		}
 		nFeaturesPerImage[i] = nExtracted;
@@ -268,7 +270,7 @@ MAIN_MSG spReturnGlobalSearch(char* queryPath, int* imgNum,
 	printf("\n");
 	flush
 
-	for (j = 0; j < 3; j++) {		//free the query Hist DB
+	for (j = 0; j < NumOfChannels; j++) {		//free the query Hist DB
 		spPointDestroy(queryHist[j]);
 	}
 	spBPQueueDestroy(globalQueue);
@@ -287,7 +289,6 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	int numQeuryFeatures = 0;
 	int *hits;
 	int* arr;
-//	SPPoint** pointHits;
 	SPBPQueue* localQueue;
 	BPQueueElement* res;
 	res = (BPQueueElement*) malloc(sizeof(*res));
@@ -313,32 +314,16 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 		for (i = 0; i < kClosest; i++) {
 			hits[arr[i]]++;
 		}
+		free(arr);
 	}
-
-//	pointHits = (SPPoint**) malloc(numOfImgs * sizeof(*pointHits));
-//	if (NULL == pointHits) {
-//		printf(ALLOC_FAIL);
-//		//TODO free mem alloc
-//		return SP_OUT_OF_MEMORY;
-//	}
 
 	localQueue = spBPQueueCreate(5);
 	for (j = 0; j < numOfImgs; j++) {
 		spBPQueueEnqueue(localQueue, j, (double) ((kClosest * numQeuryFeatures) - hits[j]));
 	}
 	free(hits);
-//	for (j = 0; j < numOfImgs; j++) {
-//		tempArray[0] = (double) hits[j];
-//		pointHits[j] = spPointCreate(tempArray, 1, j);
-//	}
-//	printf("Stop 6\n");
-//	flush
-//	qsort(pointHits, numOfImgs, sizeof(SPPoint*), cmpfunc);
 
 	printf("Nearest images using local descriptors:\n");
-//	for (j = 0; j < 5; j++) {
-//		printf("%d, ", spPointGetIndex(pointHits[j]));
-//	}
 	for (j = 0; j < 5; j++) {
 		spBPQueuePeek(localQueue, res);
 		printf("%d, ", res->index);
@@ -350,23 +335,40 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	for (j = 0; j < numQeuryFeatures; j++) {		//free the query SIFT DB
 		spPointDestroy(queryFea[j]);
 	}
-//	for (j = 0; j < numOfImgs; j++) {		//free the query hits SIFT DB
-//		spPointDestroy(pointHits[j]);
-//	}
-//	free(pointHits);
 	free(queryFea);
-	free(arr);
+	spBPQueueDestroy(localQueue);
 
 	return SP_SUCCESS;
 }
 
-int cmpfunc(const void * a, const void * b) {
-	//sort from high to low
-	int temp = 0;
-	temp = (int) (spPointGetAxisCoor((SPPoint*) b, 0)
-			- spPointGetAxisCoor((SPPoint*) a, 0));
-	if (0 == temp) {		//tie break
-		return spPointGetIndex((SPPoint*) b) - spPointGetIndex((SPPoint*) a);
+MAIN_MSG spDestroyDBsift(SPPoint*** DB,int imgNum,int* nFeaturesPerImage){
+	int i=0;
+	int j=0;
+	if(NULL == DB || NULL==nFeaturesPerImage){
+		return SP_INVALID_ARGUMENT;
 	}
-	return temp;
+	for(i=0;i<imgNum;i++){
+		for(j=0;j<nFeaturesPerImage[i];j++){
+			spPointDestroy(DB[i][j]);
+		}
+		free(DB[i]);
+	}
+	free(DB);
+	return SP_SUCCESS;
+}
+
+MAIN_MSG spDestroyDBhist(SPPoint*** DB,int imgNum){
+	int i=0;
+	int j=0;
+	if(NULL == DB){
+		return SP_INVALID_ARGUMENT;
+	}
+	for(i=0;i<imgNum;i++){
+		for(j=0;j<NumOfChannels;j++){
+			spPointDestroy(DB[i][j]);
+		}
+		free(DB[i]);
+	}
+	free(DB);
+	return SP_SUCCESS;
 }
