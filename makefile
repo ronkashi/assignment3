@@ -15,13 +15,13 @@ C_COMP_FLAG = -std=c99 -Wall -Wextra \
 -Werror -pedantic-errors -DNDEBUG
 
 $(EXEC): $(OBJS)
-	$(C++) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
+	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
 main.o: main.cpp main_aux.h sp_image_proc_util.h SPPoint.h SPBPriorityQueue.h
-	$(C++) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 main_aux.o: main_aux.h main_aux.cpp SPPoint.h SPBPriorityQueue.h
-	$(C++) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 sp_image_proc_util.o: sp_image_proc_util.h sp_image_proc_util.cpp SPPoint.h SPBPriorityQueue.h
-	$(C++) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
+	$(CPP) $(CPP_COMP_FLAG) -I$(INCLUDEPATH) -c $*.cpp
 SPPoint.o: SPPoint.c SPPoint.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h
