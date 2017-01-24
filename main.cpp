@@ -13,9 +13,9 @@
 using namespace cv;
 using namespace std;
 
+//int showPictureColor(const char* str);
 
 int main() {
-
 
 	char path[MAX_STR_LEN];
 	char prefix[MAX_STR_LEN];
@@ -26,39 +26,51 @@ int main() {
 	SPPoint*** dataBaseHist;
 	SPPoint*** dataBaseFeatures;
 
-	if(SP_EXIT==spGetUserInput(path,prefix,suffix, &imgNum,&binNum, &featuresNum)){
+	if (SP_EXIT
+			== spGetUserInput(path, prefix, suffix, &imgNum, &binNum,
+					&featuresNum)) {
 		return 0;
 	}
 
 	nFeaturesPerImage = (int*) malloc(imgNum * sizeof (int));
 
-	dataBaseHist=(SPPoint***)calloc(imgNum,sizeof(*dataBaseHist));
-	if(NULL == dataBaseHist){
+	dataBaseHist = (SPPoint***) calloc(imgNum, sizeof(*dataBaseHist));
+	if (NULL == dataBaseHist) {
 		printf(ALLOC_FAIL);
 		return 0;
 	}
-	dataBaseFeatures=(SPPoint***)calloc(imgNum,sizeof(*dataBaseFeatures));
-	if(NULL == dataBaseFeatures){
-		//TODO free dataBaseHist
+	dataBaseFeatures = (SPPoint***) calloc(imgNum, sizeof(*dataBaseFeatures));
+	if (NULL == dataBaseFeatures) {
+		spDestroyDBhist(dataBaseHist, imgNum);
 		printf(ALLOC_FAIL);
 		return 0;
 	}
 
-	spMakeFullPath(fullPath,path,prefix,suffix);
+	spMakeFullPath(fullPath, path, prefix, suffix);
 
-	spCalcHist(binNum, dataBaseHist,fullPath, imgNum);
+	if (SP_SUCCESS != spCalcHist(binNum, dataBaseHist, fullPath, imgNum)) {
+		//TODO free some resoursecses
+	}
 
-	spCalcSift(featuresNum, dataBaseFeatures,fullPath, imgNum, nFeaturesPerImage);
+	if (SP_SUCCESS
+			!= spCalcSift(featuresNum, dataBaseFeatures, fullPath, imgNum,
+					nFeaturesPerImage)) {
+		spDestroyDBsift(dataBaseFeatures, imgNum, nFeaturesPerImage);
+	}
 
-	while(SP_EXIT!=spEnterQueryImg(queryPath)){
-		spReturnGlobalSearch(queryPath,&imgNum,dataBaseHist,binNum);
+	while (SP_EXIT != spEnterQueryImg(queryPath)) {
+		spReturnGlobalSearch(queryPath, &imgNum, dataBaseHist, binNum);
 
-		spReturnLocalSearch(queryPath, &featuresNum,dataBaseFeatures, imgNum, nFeaturesPerImage);
+		spReturnLocalSearch(queryPath, &featuresNum, dataBaseFeatures, imgNum,
+				nFeaturesPerImage);
 
 	}
-	free(nFeaturesPerImage);
+	spDestroyDBsift(dataBaseFeatures, imgNum, nFeaturesPerImage);
+	spDestroyDBhist(dataBaseHist, imgNum);
 	//TODO free dataBaseHist
 	//TODO free all
+	free(nFeaturesPerImage);
+
 	return 0;
 
 }
