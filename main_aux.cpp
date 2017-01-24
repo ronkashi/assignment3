@@ -262,8 +262,12 @@ MAIN_MSG spReturnGlobalSearch(char* queryPath, int* imgNum,
 				spRGBHistL2Distance(queryHist, dataBaseHist[j]));
 	}
 	printf("Nearest images using global descriptors:\n");
-	for (j = 0; j < 5; j++) {
+	for (j = 0; j < kClosest; j++) {
 		spBPQueuePeek(globalQueue, res);
+		if(j== (kClosest-1)){
+			printf("%d", res->index);
+			break;
+		}
 		printf("%d, ", res->index);
 		spBPQueueDequeue(globalQueue);
 	}
@@ -324,8 +328,12 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	free(hits);
 
 	printf("Nearest images using local descriptors:\n");
-	for (j = 0; j < 5; j++) {
+	for (j = 0; j < kClosest; j++) {
 		spBPQueuePeek(localQueue, res);
+		if(j== (kClosest-1)){
+			printf("%d", res->index);
+			break;
+		}
 		printf("%d, ", res->index);
 		spBPQueueDequeue(localQueue);
 	}

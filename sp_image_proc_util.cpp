@@ -71,6 +71,10 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 		res[NumOfChannels - 1 - j] = spPointCreate(arr, nBins, imageIndex);
 	}
 	free(arr);
+	for (i=0;i<NumOfChannels;i++){
+		hist[i].release();
+	}
+	bgr_planes.clear();
 	return res;
 }
 
