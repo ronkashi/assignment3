@@ -94,11 +94,7 @@ MAIN_MSG spEnterBinNum(int* BinNum) {
 	imgBinNumStr = (char*) calloc(MAX_STR_LEN, sizeof(*imgBinNumStr));
 	if (NULL == imgBinNumStr) {
 		printf(ALLOC_FAIL);
-		//TODO free mem alloc
-		return SP_OUT_OF_MEMORY;
-	}
-
-	if (NULL == imgBinNumStr) {
+		free(imgBinNumStr);
 		return SP_OUT_OF_MEMORY;
 	}
 	printf(IMG_NUM_OF_MSG, "bins");
@@ -108,7 +104,6 @@ MAIN_MSG spEnterBinNum(int* BinNum) {
 	*BinNum = atoi(imgBinNumStr);
 	free(imgBinNumStr);
 	if (1 > *BinNum || 255 < *BinNum) {
-		//TODO free all mem allocations
 		printf(IMG_ERR_NUM_OF_MSG, "bins");
 		return SP_INVALID_ARGUMENT;
 	}
@@ -123,7 +118,6 @@ MAIN_MSG spEnterFeaturesNum(int* FeaturesNum) {
 	imgFeaNumStr = (char*) calloc(MAX_STR_LEN, sizeof(*imgFeaNumStr));
 	if (NULL == imgFeaNumStr) {
 		printf(ALLOC_FAIL);
-		//TODO free all mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
 	printf(IMG_NUM_OF_MSG, "features");
@@ -133,7 +127,7 @@ MAIN_MSG spEnterFeaturesNum(int* FeaturesNum) {
 	*FeaturesNum = atoi(imgFeaNumStr);
 	free(imgFeaNumStr);
 	if (1 > *FeaturesNum) {
-		//TODO free all mem allocations
+		free(imgFeaNumStr);
 		printf(IMG_ERR_NUM_OF_MSG, "features");
 		return SP_INVALID_ARGUMENT;
 	}
@@ -161,7 +155,7 @@ MAIN_MSG spGetUserInput(char* path, char* prefix, char* suffix, int* imgNum,
 	if(SP_SUCCESS!= spEnterImgPrefix(prefix)){
 		return SP_EXIT;
 	}
-	if(SP_SUCCESS != spEnterImgNum( imgNum)){
+	if(SP_SUCCESS != spEnterImgNum(imgNum)){
 		return SP_EXIT;
 	}
 	if(SP_SUCCESS!= spEnterImgSuffix(suffix)){
@@ -176,16 +170,21 @@ MAIN_MSG spGetUserInput(char* path, char* prefix, char* suffix, int* imgNum,
 	return SP_SUCCESS;
 }
 
-
 MAIN_MSG spCalcHist(int numOfBins, SPPoint*** dataBaseHist,
 		const char* fullPath, int numOfImgs) {
 	int i;
 	char* path = (char*) malloc(MAX_STR_LEN * sizeof(char));
+	if (NULL == path) {
+		free(dataBaseHist);
+		printf(ALLOC_FAIL);
+		return SP_OUT_OF_MEMORY;
+	}
 	for (i = 0; i < numOfImgs; i++) {
-		sprintf(path, fullPath, i);//TODO what a full path it should get
+		sprintf(path, fullPath, i);
 		dataBaseHist[i] = spGetRGBHist(path, i, numOfBins);
 		if (dataBaseHist[i] == NULL) {
-			//free resources
+			spDestroyDBhist(dataBaseHist,i);
+			free(path);
 			printf(ALLOC_FAIL);
 			return SP_OUT_OF_MEMORY;
 		}
@@ -198,12 +197,18 @@ MAIN_MSG spCalcSift(int numOfFeaturesToExtract, SPPoint*** dataBaseFeatures,
 		const char* fullPath, int numOfImgs, int* nFeaturesPerImage) {
 	int i, nExtracted;
 	char* path = (char*) malloc(MAX_STR_LEN * sizeof(char));
+	if (NULL == path) {
+		free(dataBaseFeatures);
+		printf(ALLOC_FAIL);
+		return SP_OUT_OF_MEMORY;
+	}
 	for (i = 0; i < numOfImgs; i++) {
-		sprintf(path, fullPath, i);//TODO what a full path it should get
+		sprintf(path, fullPath, i);
 		dataBaseFeatures[i] = spGetSiftDescriptors(path, i,
 				numOfFeaturesToExtract, &nExtracted);
 		if (dataBaseFeatures[i] == NULL) {
-			//TODO free resources
+			spDestroyDBsift(dataBaseFeatures,i,nFeaturesPerImage);
+			free(path);
 			printf(ALLOC_FAIL);
 			return SP_OUT_OF_MEMORY;
 		}
@@ -224,9 +229,6 @@ MAIN_MSG spEnterQueryImg(char* queryPath) {
 	scanf("%s*c", queryPath);
 	flush
 	if (queryPath[0] == '#') {
-		//TODO free all allocations
-		//TODO exit the program
-		//TODO boof trrach shikshikshik the program will die
 		printf(EXIT_MSG);
 		return SP_EXIT;
 	}
@@ -244,19 +246,22 @@ MAIN_MSG spReturnGlobalSearch(char* queryPath, int* imgNum,
 	globalQueue = spBPQueueCreate(5);
 	if (NULL == globalQueue) {
 		printf(ALLOC_FAIL);
-		//TODO free mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
 	BPQueueElement* res;
 	res = (BPQueueElement*) malloc(sizeof(*res));
 	if (NULL == res) {
+		spBPQueueDestroy(globalQueue);
 		printf(ALLOC_FAIL);
-		//TODO free mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
-	//TODO maybe convert query path to const char
 	queryHist = spGetRGBHist(queryPath, MAX_STR_LEN, nBins);//TODO max its is nonsense
-
+	if (NULL == queryHist) {
+		spBPQueueDestroy(globalQueue);
+		free(res);
+		printf(ALLOC_FAIL);
+		return SP_OUT_OF_MEMORY;
+	}
 	for (j = 0; j < (*imgNum); j++) {
 		spBPQueueEnqueue(globalQueue, j,
 				spRGBHistL2Distance(queryHist, dataBaseHist[j]));
@@ -298,23 +303,40 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	res = (BPQueueElement*) malloc(sizeof(*res));
 	if (NULL == res) {
 		printf(ALLOC_FAIL);
-		//TODO free mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
 
-	//TODO maybe convert query path to const char
 	queryFea = spGetSiftDescriptors(queryPath, MAX_STR_LEN,
 			*FeaturesNumToExtract, &numQeuryFeatures);//TODO MAX_STR_LEN its is nonsense
 	if (NULL == queryFea) {
+		free(res);
 		printf(ALLOC_FAIL);
-		//TODO free mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
 
 	hits = (int*) calloc(numOfImgs, sizeof (int));
+	if (NULL == hits) {
+		free(res);
+		for(i=0;i<numQeuryFeatures;i++){
+			spPointDestroy(queryFea[i]);
+		}
+		free(queryFea);
+		printf(ALLOC_FAIL);
+		return SP_OUT_OF_MEMORY;
+	}
 	for (j = 0; j < numQeuryFeatures; j++) {
 		arr = spBestSIFTL2SquaredDistance(kClosest, queryFea[j],
 				dataBaseFeatures, numOfImgs, nFeaturesPerImage);
+		if(NULL == arr){
+			free(hits);
+			free(res);
+			for(i=0;i<numQeuryFeatures;i++){
+				spPointDestroy(queryFea[i]);
+			}
+			free(queryFea);
+			printf(ALLOC_FAIL);
+			return SP_OUT_OF_MEMORY;
+		}
 		for (i = 0; i < kClosest; i++) {
 			hits[arr[i]]++;
 		}
@@ -322,6 +344,17 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	}
 
 	localQueue = spBPQueueCreate(5);
+	if(NULL == localQueue){
+		free(hits);
+		free(res);
+		for(i=0;i<numQeuryFeatures;i++){
+			spPointDestroy(queryFea[i]);
+		}
+		free(queryFea);
+		printf(ALLOC_FAIL);
+		return SP_OUT_OF_MEMORY;
+
+	}
 	for (j = 0; j < numOfImgs; j++) {
 		spBPQueueEnqueue(localQueue, j, (double) ((kClosest * numQeuryFeatures) - hits[j]));
 	}
@@ -345,6 +378,7 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	}
 	free(queryFea);
 	spBPQueueDestroy(localQueue);
+	free(res);
 
 	return SP_SUCCESS;
 }

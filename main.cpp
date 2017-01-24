@@ -10,10 +10,6 @@
 #include <iostream>
 #include "sp_image_proc_util.h"
 #include "main_aux.h"
-using namespace cv;
-using namespace std;
-
-//int showPictureColor(const char* str);
 
 int main() {
 
@@ -22,7 +18,8 @@ int main() {
 	char suffix[MAX_STR_LEN];
 	char fullPath[MAX_STR_LEN];
 	char queryPath[MAX_STR_LEN];
-	int imgNum=1, binNum=0, featuresNum=0, *nFeaturesPerImage;
+	bool flag = true;
+	int imgNum = 1, binNum = 0, featuresNum = 0, *nFeaturesPerImage;
 	SPPoint*** dataBaseHist;
 	SPPoint*** dataBaseFeatures;
 
@@ -32,16 +29,22 @@ int main() {
 		return 0;
 	}
 
-	nFeaturesPerImage = (int*) malloc(imgNum * sizeof (int));
+	nFeaturesPerImage = (int*) malloc(imgNum * sizeof(int));
+	if (NULL == nFeaturesPerImage) {
+		printf(ALLOC_FAIL);
+		return 0;
+	}
 
 	dataBaseHist = (SPPoint***) calloc(imgNum, sizeof(*dataBaseHist));
 	if (NULL == dataBaseHist) {
+		free(nFeaturesPerImage);
 		printf(ALLOC_FAIL);
 		return 0;
 	}
 	dataBaseFeatures = (SPPoint***) calloc(imgNum, sizeof(*dataBaseFeatures));
 	if (NULL == dataBaseFeatures) {
-		spDestroyDBhist(dataBaseHist, imgNum);
+		free(dataBaseHist);
+		free(nFeaturesPerImage);
 		printf(ALLOC_FAIL);
 		return 0;
 	}
@@ -49,26 +52,35 @@ int main() {
 	spMakeFullPath(fullPath, path, prefix, suffix);
 
 	if (SP_SUCCESS != spCalcHist(binNum, dataBaseHist, fullPath, imgNum)) {
-		//TODO free some resoursecses
+		free(dataBaseFeatures);
+		free(nFeaturesPerImage);
 	}
 
 	if (SP_SUCCESS
 			!= spCalcSift(featuresNum, dataBaseFeatures, fullPath, imgNum,
 					nFeaturesPerImage)) {
-		spDestroyDBsift(dataBaseFeatures, imgNum, nFeaturesPerImage);
+		spDestroyDBhist(dataBaseHist, imgNum);
+		free(nFeaturesPerImage);
+
 	}
 
-	while (SP_EXIT != spEnterQueryImg(queryPath)) {
-		spReturnGlobalSearch(queryPath, &imgNum, dataBaseHist, binNum);
-
-		spReturnLocalSearch(queryPath, &featuresNum, dataBaseFeatures, imgNum,
-				nFeaturesPerImage);
+	while ((SP_EXIT != spEnterQueryImg(queryPath)) && flag) {
+		if (SP_SUCCESS
+				!= spReturnGlobalSearch(queryPath, &imgNum, dataBaseHist,
+						binNum)) {
+			flag = false;
+		}
+		if (flag) {
+			if (SP_SUCCESS
+					!= spReturnLocalSearch(queryPath, &featuresNum,
+							dataBaseFeatures, imgNum, nFeaturesPerImage)) {
+				flag=false;
+			}
+		}
 
 	}
 	spDestroyDBsift(dataBaseFeatures, imgNum, nFeaturesPerImage);
 	spDestroyDBhist(dataBaseHist, imgNum);
-	//TODO free dataBaseHist
-	//TODO free all
 	free(nFeaturesPerImage);
 
 	return 0;

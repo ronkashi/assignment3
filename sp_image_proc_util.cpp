@@ -35,10 +35,10 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	double *arr;
 	src = imread(str, CV_LOAD_IMAGE_COLOR);
 	if (src.empty()){
-		printf(IMG_NOT_LOADED,str); //TODO free all mallocs and exit
+		printf(IMG_NOT_LOADED,str);
 		return NULL;	//a problem with loading image
 	}
-	res = (SPPoint**) malloc(3 * sizeof(*res));
+	res = (SPPoint**) malloc(NumOfChannels * sizeof(*res));
 	if (NULL == res) {
 		return NULL;
 	}
@@ -64,6 +64,10 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	calcHist(&bgr_planes[1], nImages, 0, Mat(), hist[1], 1, &nBins, &histRange);
 	calcHist(&bgr_planes[2], nImages, 0, Mat(), hist[2], 1, &nBins, &histRange);
 	arr = (double*) malloc(nBins * sizeof (double));
+	if (NULL == arr) {
+		free(res);
+		return NULL;
+	}
 	for (j = 0; j < NumOfChannels; j++) {
 		for (i = 0; i < nBins; i++) {
 			arr[i] = hist[j].at<float>(i);
@@ -87,7 +91,6 @@ double spRGBHistL2Distance(SPPoint** rgbHistA, SPPoint** rgbHistB) {
 	}
 	for (i = 0; i < 3; i++) {
 		sum += spPointL2SquaredDistance(rgbHistA[i], rgbHistB[i]);
-		//printf("the %d dis between %f\n",i,sum);
 	}
 	sum = sum / 3;
 	return sum;
@@ -95,12 +98,12 @@ double spRGBHistL2Distance(SPPoint** rgbHistA, SPPoint** rgbHistB) {
 
 SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 		int nFeaturesToExtract, int *nFeatures) {
-	int i, j;
+	int i, j,k;
 	double* cord_array;
 	cv::Mat src;
 	src = cv::imread(str, CV_LOAD_IMAGE_GRAYSCALE);
 	if (src.empty()) {
-		printf(IMG_NOT_LOADED,str); //TODO free all mallocs and exit
+		printf(IMG_NOT_LOADED,str);
 		return NULL;
 	}
 	//Key points will be stored in kp1;
@@ -121,11 +124,22 @@ SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 		return NULL;
 	}
 	cord_array = (double*) malloc(ds1.cols * sizeof(double));
+	if (cord_array == NULL) {
+		free(pointArray);
+		return NULL;
+	}
 	for (i = 0; i < ds1.rows; i++) {
 		for (j = 0; j < ds1.cols; j++) {
 			cord_array[j] = (double) ds1.at<float>(i, j);
 		}
 		pointArray[i] = spPointCreate(cord_array, ds1.cols, imageIndex);
+		if (pointArray[i] == NULL) {
+			for(k=0;k<i;k++){
+				spPointDestroy(pointArray[k]);
+			}
+			free(cord_array);
+			return NULL;
+		}
 	}
 	*nFeatures = ds1.rows;
 	free(cord_array);
@@ -139,7 +153,7 @@ int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
 	BPQueueElement* element;
 	int i, j;
 	int* array;
-	queue = spBPQueueCreate(kClosest); // creating the queue that will hold teh index-L2distance elements
+	queue = spBPQueueCreate(kClosest); // creating the queue that will hold the index-L2distance elements
 	if (queue == NULL) {
 		return NULL;
 	}
@@ -151,7 +165,16 @@ int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
 		}
 	}
 	element = (BPQueueElement*) malloc(sizeof(BPQueueElement)); // will store the index and value when peeking
+	if (element == NULL) {
+		spBPQueueDestroy(queue);
+		return NULL;
+	}
 	array = (int*) malloc(kClosest * sizeof(int));
+	if (array == NULL) {
+		spBPQueueDestroy(queue);
+		free(element);
+		return NULL;
+	}
 	for (i = 0; i < kClosest; i++) {
 		spBPQueuePeek(queue, element); // gets the index and value of the smallest valued element
 		array[i] = element->index; // prints the index
@@ -162,20 +185,4 @@ int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
 	return array;
 }
 
-int showPictureColor(const char* str) {
-	Mat image;
-	image = imread(str, CV_LOAD_IMAGE_COLOR);   // Read the file
-
-	if (!image.data)   // Check for invalid input
-	{
-		printf("Could not open or find the image\n");
-		return -1;
-	}
-
-	namedWindow("Display window", WINDOW_AUTOSIZE); // Create a window for display.
-	imshow("Display window", image); // Show our image inside it.
-
-	waitKey(0); // Wait for a keystroke in the window
-	return 0;
-}
 
