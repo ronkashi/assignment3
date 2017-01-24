@@ -144,8 +144,7 @@ MAIN_MSG spMakeFullPath(char* fullPath, char* path, char* prefix, char* suffix) 
 	if (NULL == fullPath || NULL == path || NULL == prefix || NULL == suffix) {
 		return SP_INVALID_ARGUMENT;
 	}
-//	char buffer[MAX_STR_LEN];
-//	sprintf(buffer, "%d", imgCurrNum);
+	memset(fullPath,0, sizeof (*fullPath));
 	strcat(fullPath, path);
 	strcat(fullPath, prefix);
 	strcat(fullPath, "%d");
@@ -269,7 +268,7 @@ MAIN_MSG spReturnGlobalSearch(char* queryPath, int* imgNum,
 	printf("\n");
 	flush
 
-	for (j = 0; j < NumOfChannels; j++) {		//free the query Hist DB
+	for (j = 0; j < 3; j++) {		//free the query Hist DB
 		spPointDestroy(queryHist[j]);
 	}
 	spBPQueueDestroy(globalQueue);
@@ -285,64 +284,77 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 	}
 	SPPoint** queryFea;
 	int j = 0, i = 0;
-	int* numQeuryFeatures;
-	int hits[numOfImgs] = { 0 };
+	int numQeuryFeatures = 0;
+	int *hits;
 	int* arr;
-	SPPoint** pointHits;
-
-	numQeuryFeatures = (int*) malloc(sizeof(*numQeuryFeatures));
-	if (NULL == numQeuryFeatures) {
+//	SPPoint** pointHits;
+	SPBPQueue* localQueue;
+	BPQueueElement* res;
+	res = (BPQueueElement*) malloc(sizeof(*res));
+	if (NULL == res) {
 		printf(ALLOC_FAIL);
 		//TODO free mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
-	*numQeuryFeatures = 0;
 
 	//TODO maybe convert query path to const char
 	queryFea = spGetSiftDescriptors(queryPath, MAX_STR_LEN,
-			*FeaturesNumToExtract, numQeuryFeatures);//TODO MAX_STR_LEN its is nonsense
+			*FeaturesNumToExtract, &numQeuryFeatures);//TODO MAX_STR_LEN its is nonsense
 	if (NULL == queryFea) {
 		printf(ALLOC_FAIL);
 		//TODO free mem alloc
 		return SP_OUT_OF_MEMORY;
 	}
 
-	for (j = 0; j < (*numQeuryFeatures); j++) {
+	hits = (int*) calloc(numOfImgs, sizeof (int));
+	for (j = 0; j < numQeuryFeatures; j++) {
 		arr = spBestSIFTL2SquaredDistance(kClosest, queryFea[j],
 				dataBaseFeatures, numOfImgs, nFeaturesPerImage);
 		for (i = 0; i < kClosest; i++) {
-			hits[arr[j]]++;
+			hits[arr[i]]++;
 		}
 	}
 
-	pointHits = (SPPoint**) malloc(numOfImgs * sizeof(*pointHits));
-	if (NULL == pointHits) {
-		printf(ALLOC_FAIL);
-		//TODO free mem alloc
-		return SP_OUT_OF_MEMORY;
-	}
+//	pointHits = (SPPoint**) malloc(numOfImgs * sizeof(*pointHits));
+//	if (NULL == pointHits) {
+//		printf(ALLOC_FAIL);
+//		//TODO free mem alloc
+//		return SP_OUT_OF_MEMORY;
+//	}
 
+	localQueue = spBPQueueCreate(5);
 	for (j = 0; j < numOfImgs; j++) {
-		pointHits[j] = spPointCreate((double*) (&hits[j]), 1, j);
+		spBPQueueEnqueue(localQueue, j, (double) ((kClosest * numQeuryFeatures) - hits[j]));
 	}
-	qsort(pointHits[0], numOfImgs, sizeof(pointHits[0]), cmpfunc);
+	free(hits);
+//	for (j = 0; j < numOfImgs; j++) {
+//		tempArray[0] = (double) hits[j];
+//		pointHits[j] = spPointCreate(tempArray, 1, j);
+//	}
+//	printf("Stop 6\n");
+//	flush
+//	qsort(pointHits, numOfImgs, sizeof(SPPoint*), cmpfunc);
 
 	printf("Nearest images using local descriptors:\n");
+//	for (j = 0; j < 5; j++) {
+//		printf("%d, ", spPointGetIndex(pointHits[j]));
+//	}
 	for (j = 0; j < 5; j++) {
-		printf("%d, ", spPointGetIndex(pointHits[j]));
+		spBPQueuePeek(localQueue, res);
+		printf("%d, ", res->index);
+		spBPQueueDequeue(localQueue);
 	}
 	printf("\n");
 	flush
 
-	for (j = 0; j < *numQeuryFeatures; j++) {		//free the query SIFT DB
+	for (j = 0; j < numQeuryFeatures; j++) {		//free the query SIFT DB
 		spPointDestroy(queryFea[j]);
 	}
-	for (j = 0; j < numOfImgs; j++) {		//free the query hits SIFT DB
-		spPointDestroy(pointHits[j]);
-	}
-	free(pointHits);
+//	for (j = 0; j < numOfImgs; j++) {		//free the query hits SIFT DB
+//		spPointDestroy(pointHits[j]);
+//	}
+//	free(pointHits);
 	free(queryFea);
-	free(numQeuryFeatures);
 	free(arr);
 
 	return SP_SUCCESS;
@@ -351,8 +363,8 @@ MAIN_MSG spReturnLocalSearch(char* queryPath, int* FeaturesNumToExtract,
 int cmpfunc(const void * a, const void * b) {
 	//sort from high to low
 	int temp = 0;
-	temp = (spPointGetAxisCoor((SPPoint*) b, 1)
-			- spPointGetAxisCoor((SPPoint*) a, 1));
+	temp = (int) (spPointGetAxisCoor((SPPoint*) b, 0)
+			- spPointGetAxisCoor((SPPoint*) a, 0));
 	if (0 == temp) {		//tie break
 		return spPointGetIndex((SPPoint*) b) - spPointGetIndex((SPPoint*) a);
 	}
