@@ -33,7 +33,7 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	SPPoint** res;
 	int i = 0, j = 0;
 	double *arr;
-	if (str == NULL || nbins <=0) {
+	if (str == NULL || nBins <=0) {
 		printf("Invalid input");
 		return NULL;
 	}
