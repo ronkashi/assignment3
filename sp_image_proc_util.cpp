@@ -33,6 +33,10 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	SPPoint** res;
 	int i = 0, j = 0;
 	double *arr;
+	if (str == NULL || nbins <=0) {
+		printf("Invalid input");
+		return NULL;
+	}
 	src = imread(str, CV_LOAD_IMAGE_COLOR);
 	if (src.empty()){
 		printf(IMG_NOT_LOADED,str);
@@ -101,6 +105,10 @@ SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 	int i, j,k;
 	double* cord_array;
 	cv::Mat src;
+	if (str == NULL || nFeaturesToExtract <=0 || nFeatures == NULL) {
+		printf("Invalid input");
+		return NULL;
+	}
 	src = cv::imread(str, CV_LOAD_IMAGE_GRAYSCALE);
 	if (src.empty()) {
 		printf(IMG_NOT_LOADED,str);
@@ -153,6 +161,10 @@ int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
 	BPQueueElement* element;
 	int i, j;
 	int* array;
+	if (queryFeature == NULL || numberOfImages <=1 || nFeaturesPerImage == NULL || databaseFeatures == NULL) {
+		printf("Invalid input");
+		return NULL;
+	}
 	queue = spBPQueueCreate(kClosest); // creating the queue that will hold the index-L2distance elements
 	if (queue == NULL) {
 		return NULL;
