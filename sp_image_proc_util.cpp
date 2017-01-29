@@ -6,10 +6,8 @@
  */
 
 #include "sp_image_proc_util.h"
-
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/features2d.hpp>
-
 #include <opencv2/imgproc.hpp>//calcHist
 #include <opencv2/core.hpp>//Mat
 #include <opencv2/highgui.hpp>
@@ -22,21 +20,15 @@ using namespace std;
 #define IMG_NOT_LOADED "Image cannot be loaded - %s:\n"
 extern "C" {
 //Use this syntax in-order to include C-header files
-//HINT : You don't need to include other C header files here -> Maybe in sp_image_proc_util.c ? <-
 #include "SPPoint.h"
 #include "SPBPriorityQueue.h"
-#include <assert.h>
 }
 
 SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 	Mat src;
 	SPPoint** res;
-	int i = 0, j = 0;
+	int i = 0, j = 0,k=0;
 	double *arr;
-	if (str == NULL || nBins <=0) {
-		printf("Invalid input");
-		return NULL;
-	}
 	src = imread(str, CV_LOAD_IMAGE_COLOR);
 	if (src.empty()){
 		printf(IMG_NOT_LOADED,str);
@@ -72,12 +64,21 @@ SPPoint** spGetRGBHist(const char* str, int imageIndex, int nBins) {
 		free(res);
 		return NULL;
 	}
+	//convert data form MAT -> Array -> point
 	for (j = 0; j < NumOfChannels; j++) {
 		for (i = 0; i < nBins; i++) {
 			arr[i] = hist[j].at<float>(i);
 		}
 		res[NumOfChannels - 1 - j] = spPointCreate(arr, nBins, imageIndex);
+		if (res[NumOfChannels - 1 - j] == NULL) {
+			for(k=0;k< j;k++){
+				spPointDestroy(res[j]);
+			}
+			free(res);
+			return NULL;
+		}
 	}
+	//free resources
 	free(arr);
 	for (i=0;i<NumOfChannels;i++){
 		hist[i].release();
@@ -105,10 +106,6 @@ SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 	int i, j,k;
 	double* cord_array;
 	cv::Mat src;
-	if (str == NULL || nFeaturesToExtract <=0 || nFeatures == NULL) {
-		printf("Invalid input");
-		return NULL;
-	}
 	src = cv::imread(str, CV_LOAD_IMAGE_GRAYSCALE);
 	if (src.empty()) {
 		printf(IMG_NOT_LOADED,str);
@@ -136,6 +133,7 @@ SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 		free(pointArray);
 		return NULL;
 	}
+	//convert data form MAT -> Array -> point
 	for (i = 0; i < ds1.rows; i++) {
 		for (j = 0; j < ds1.cols; j++) {
 			cord_array[j] = (double) ds1.at<float>(i, j);
@@ -150,6 +148,7 @@ SPPoint** spGetSiftDescriptors(const char* str, int imageIndex,
 		}
 	}
 	*nFeatures = ds1.rows;
+	//free resources
 	free(cord_array);
 	return pointArray;
 }
@@ -161,10 +160,6 @@ int* spBestSIFTL2SquaredDistance(int kClosest, SPPoint* queryFeature,
 	BPQueueElement* element;
 	int i, j;
 	int* array;
-	if (queryFeature == NULL || numberOfImages <=1 || nFeaturesPerImage == NULL || databaseFeatures == NULL) {
-		printf("Invalid input");
-		return NULL;
-	}
 	queue = spBPQueueCreate(kClosest); // creating the queue that will hold the index-L2distance elements
 	if (queue == NULL) {
 		return NULL;
